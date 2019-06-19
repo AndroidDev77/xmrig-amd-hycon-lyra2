@@ -66,13 +66,12 @@ xmrig::Job::Job() :
     m_size(0),
     m_diff(0),
     m_target(0),
-    m_blob(),
-    m_height(0)
+    m_blob()
 {
 }
 
 
-xmrig::Job::Job(int poolId, bool nicehash, const Algorithm &algorithm, const Id &clientId) :
+xmrig::Job::Job(int poolId, bool nicehash, Algorithm algorithm, const Id &clientId):
     m_autoVariant(algorithm.variant() == VARIANT_AUTO),
     m_nicehash(nicehash),
     m_poolId(poolId),
@@ -81,7 +80,6 @@ xmrig::Job::Job(int poolId, bool nicehash, const Algorithm &algorithm, const Id 
     m_diff(0),
     m_target(0),
     m_blob(),
-    m_height(0),
     m_algorithm(algorithm),
     m_clientId(clientId)
 {
@@ -90,12 +88,6 @@ xmrig::Job::Job(int poolId, bool nicehash, const Algorithm &algorithm, const Id 
 
 xmrig::Job::~Job()
 {
-}
-
-
-bool xmrig::Job::isEqual(const Job &other) const
-{
-    return m_id == other.m_id && m_clientId == other.m_clientId && memcmp(m_blob, other.m_blob, sizeof(m_blob)) == 0;
 }
 
 
@@ -111,7 +103,7 @@ bool xmrig::Job::setBlob(const char *blob)
     }
 
     m_size /= 2;
-    if (m_size < 76 || m_size >= sizeof(m_blob)) {
+    if (m_size < 76 || m_size >= BLOB_SIZE) {
         return false;
     }
 
@@ -123,14 +115,14 @@ bool xmrig::Job::setBlob(const char *blob)
         m_nicehash = true;
     }
 
-    if (m_autoVariant) {
+    /*if (m_autoVariant) {
         m_algorithm.setVariant(variant());
-    }
+    }*/
 
-#   ifdef XMRIG_PROXY_PROJECT
+#ifdef XMRIG_PROXY_PROJECT
     memset(m_rawBlob, 0, sizeof(m_rawBlob));
     memcpy(m_rawBlob, blob, m_size * 2);
-#   endif
+#endif
 
     return true;
 }
@@ -168,29 +160,23 @@ bool xmrig::Job::setTarget(const char *target)
         return false;
     }
 
-#   ifdef XMRIG_PROXY_PROJECT
+#ifdef XMRIG_PROXY_PROJECT
     memset(m_rawTarget, 0, sizeof(m_rawTarget));
     memcpy(m_rawTarget, target, len);
-#   endif
+#endif
 
     m_diff = toDiff(m_target);
     return true;
 }
 
 
-void xmrig::Job::setAlgorithm(const char *algo)
+xmrig::Variant xmrig::Job::variant() const
 {
-    m_algorithm.parseAlgorithm(algo);
-
-    if (m_algorithm.variant() == xmrig::VARIANT_AUTO) {
-        m_algorithm.setVariant(variant());
+    if (m_algorithm.algo() == xmrig::LYRA2) {
+        return xmrig::VARIANT_0;
     }
-}
 
-
-void xmrig::Job::setHeight(uint64_t height)
-{
-    m_height = height;
+    return m_algorithm.variant();
 }
 
 
@@ -228,21 +214,13 @@ char *xmrig::Job::toHex(const unsigned char* in, unsigned int len)
 #endif
 
 
-xmrig::Variant xmrig::Job::variant() const
+bool xmrig::Job::operator==(const Job &other) const
 {
-    switch (m_algorithm.algo()) {
-    case CRYPTONIGHT:
-        return (m_blob[0] >= 10) ? VARIANT_4 : ((m_blob[0] >= 8) ? VARIANT_2 : VARIANT_1);
+    return m_id == other.m_id && memcmp(m_blob, other.m_blob, m_size) == 0;
+}
 
-    case CRYPTONIGHT_LITE:
-        return VARIANT_1;
 
-    case CRYPTONIGHT_HEAVY:
-        return VARIANT_0;
-
-    default:
-        break;
-    }
-
-    return m_algorithm.variant();
+bool xmrig::Job::operator!=(const Job &other) const
+{
+    return m_id != other.m_id || memcmp(m_blob, other.m_blob, m_size) != 0;
 }

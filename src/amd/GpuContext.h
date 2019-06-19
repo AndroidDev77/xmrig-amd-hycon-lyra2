@@ -64,8 +64,8 @@ struct GpuContext
         ExtraBuffers{ nullptr },
         Program(nullptr),
         Kernels{ nullptr },
-        ProgramCryptonightR(nullptr),
-        HeightCryptonightR(0),
+        ProgramLyra2(nullptr),
+        HeightLyra2(0),
         freeMem(0),
         globalMem(0),
         computeUnits(0),
@@ -95,11 +95,11 @@ struct GpuContext
     cl_command_queue CommandQueues;
     cl_mem InputBuffer;
     cl_mem OutputBuffer;
-    cl_mem ExtraBuffers[6];
+    cl_mem ExtraBuffers[2];
     cl_program Program;
-    cl_kernel Kernels[32];
-    cl_program ProgramCryptonightR;
-    uint64_t HeightCryptonightR;
+    cl_kernel Kernels[1];
+    cl_program ProgramLyra2;
+    uint32_t HeightLyra2;
     size_t freeMem;
     size_t globalMem;
     cl_uint computeUnits;

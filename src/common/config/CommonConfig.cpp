@@ -65,7 +65,7 @@
 
 
 xmrig::CommonConfig::CommonConfig() :
-    m_algorithm(CRYPTONIGHT, VARIANT_AUTO),
+    m_algorithm(LYRA2, VARIANT_AUTO),
     m_adjusted(false),
     m_apiIPv6(false),
     m_apiRestricted(true),

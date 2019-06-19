@@ -31,7 +31,7 @@
 #include "common/log/Log.h"
 #include "core/Config.h"
 #include "core/Controller.h"
-#include "crypto/CryptoNight.h"
+#include "crypto/lyra.h"
 #include "interfaces/IJobResultListener.h"
 #include "interfaces/IThread.h"
 #include "rapidjson/document.h"
@@ -326,13 +326,13 @@ void Workers::onResult(uv_async_t *handle)
                 return;
             }
 
-            cryptonight_ctx *ctx;
+            Lyra2_ctx *ctx;
             MemInfo info = Mem::create(&ctx, baton->jobs[0].algorithm().algo(), 1);
 
             for (const xmrig::Job &job : baton->jobs) {
                 xmrig::JobResult result(job);
 
-                if (CryptoNight::hash(job, result, ctx)) {
+                if (Lyra2::hash(job, result, ctx)) {
                     baton->results.push_back(result);
                 }
                 else {

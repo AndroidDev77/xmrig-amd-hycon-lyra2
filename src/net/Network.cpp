@@ -51,9 +51,9 @@ xmrig::Network::Network(Controller *controller) :
     const Pools &pools = controller->config()->pools();
     m_strategy = pools.createStrategy(this);
 
-    if (controller->config()->donateLevel() > 0) {
-        m_donate = new DonateStrategy(controller->config()->donateLevel(), pools.data().front().user(), controller->config()->algorithm().algo(), this);
-    }
+    //if (controller->config()->donateLevel() > 0) {
+    //    m_donate = new DonateStrategy(controller->config()->donateLevel(), pools.data().front().user(), controller->config()->algorithm().algo(), this);
+    //}
 
     m_timer.data = this;
     uv_timer_init(uv_default_loop(), &m_timer);

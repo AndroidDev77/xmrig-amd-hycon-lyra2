@@ -27,11 +27,53 @@
 #include "common/utils/mm_malloc.h"
 #include "crypto/CryptoNight.h"
 #include "crypto/CryptoNight_constants.h"
+#include "crypto/Lyra.h"
 #include "Mem.h"
 
 
 bool Mem::m_enabled = true;
 int Mem::m_flags    = 0;
+
+
+
+MemInfo Mem::create(Lyra2_ctx** ctx, xmrig::Algo algorithm, size_t count)
+{
+	using namespace xmrig;
+
+	MemInfo info;
+	info.size = LYRA2_MEMORY * count;
+
+	constexpr const size_t align_size = 16 * 1024 * 1024;
+	info.size = ((info.size + align_size - 1) / align_size) * align_size;
+	info.pages = info.size / align_size;
+
+	allocate(info, m_enabled);
+
+	for (size_t i = 0; i < count; ++i) {
+		Lyra2_ctx* c = static_cast<Lyra2_ctx*>(_mm_malloc(sizeof(Lyra2_ctx), 4096));
+		c->memory = info.memory + (i * LYRA2_MEMORY);
+
+		uint8_t* p = reinterpret_cast<uint8_t*>(allocateExecutableMemory(LYRA2_MEMORY));
+		c->generated_code_data.variant = xmrig::VARIANT_MAX;
+		c->generated_code_data.height = (uint64_t)(-1);
+		c->generated_code_data = c->generated_code_data;
+
+		ctx[i] = c;
+	}
+
+	return info;
+}
+
+
+void Mem::release(Lyra2_ctx** ctx, size_t count, MemInfo& info)
+{
+	release(info);
+
+	for (size_t i = 0; i < count; ++i) {
+		_mm_free(ctx[i]);
+	}
+}
+
 
 
 MemInfo Mem::create(cryptonight_ctx **ctx, xmrig::Algo algorithm, size_t count)

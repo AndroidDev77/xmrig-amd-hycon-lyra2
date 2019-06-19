@@ -65,15 +65,15 @@ static inline OSVERSIONINFOEX winOsVersion()
 char *Platform::createUserAgent()
 {
     const auto osver = winOsVersion();
-    constexpr const size_t max = 256;
+    constexpr const size_t max = 160;
 
     char *buf = new char[max]();
     int length = snprintf(buf, max, "%s/%s (Windows NT %lu.%lu", APP_NAME, APP_VERSION, osver.dwMajorVersion, osver.dwMinorVersion);
 
 #   if defined(__x86_64__) || defined(_M_AMD64)
-    length += snprintf(buf + length, max - length, "; Win64; x64) libuv/%s", uv_version_string());
+    length += snprintf(buf + length, max - length, "; Win64; x64) libuv/1.19.2", uv_version_string());
 #   else
-    length += snprintf(buf + length, max - length, ") libuv/%s", uv_version_string());
+    length += snprintf(buf + length, max - length, ") libuv/1.19.2", uv_version_string());
 #   endif
 
 #   ifdef XMRIG_NVIDIA_PROJECT
@@ -81,11 +81,11 @@ char *Platform::createUserAgent()
     length += snprintf(buf + length, max - length, " CUDA/%d.%d", cudaVersion / 1000, cudaVersion % 100);
 #   endif
 
-#   ifdef __GNUC__
-    length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-#   elif _MSC_VER
-    length += snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
-#   endif
+#   //ifdef __GNUC__
+    length += snprintf(buf + length, max - length, " gcc/7.3.0", MSVC_VERSION);
+#   //elif _MSC_VER
+    //length += snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
+#   //endif
 
     return buf;
 }
@@ -102,7 +102,7 @@ bool Platform::setThreadAffinity(uint64_t cpu_id)
 
 
 uint32_t Platform::setTimerResolution(uint32_t resolution)
-{
+{/*
 #   ifdef XMRIG_AMD_PROJECT
     TIMECAPS tc;
 
@@ -115,17 +115,18 @@ uint32_t Platform::setTimerResolution(uint32_t resolution)
     return timeBeginPeriod(timerResolution) == TIMERR_NOERROR ? timerResolution : 0;
 #   else
     return resolution;
-#   endif
+#   endif*/
+	return 0;
 }
 
 
 void Platform::restoreTimerResolution()
-{
+{/*
 #   ifdef XMRIG_AMD_PROJECT
     if (timerResolution) {
         timeEndPeriod(timerResolution);
     }
-#   endif
+#   endif*/
 }
 
 

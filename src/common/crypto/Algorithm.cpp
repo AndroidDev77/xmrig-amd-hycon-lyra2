@@ -8,7 +8,7 @@
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- *
+ * Copyright 2019      Appmodilla
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
@@ -54,95 +54,18 @@ struct AlgoData
 
 
 static AlgoData const algorithms[] = {
-    { "cryptonight",           "cn",           xmrig::CRYPTONIGHT,       xmrig::VARIANT_AUTO   },
-    { "cryptonight/0",         "cn/0",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_0      },
-    { "cryptonight/1",         "cn/1",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_1      },
-    { "cryptonight/xtl",       "cn/xtl",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_XTL    },
-    { "cryptonight/msr",       "cn/msr",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_MSR    },
-    { "cryptonight/xao",       "cn/xao",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_XAO    },
-    { "cryptonight/rto",       "cn/rto",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_RTO    },
-    { "cryptonight/2",         "cn/2",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_2      },
-    { "cryptonight/half",      "cn/half",      xmrig::CRYPTONIGHT,       xmrig::VARIANT_HALF   },
-    { "cryptonight/xtlv9",     "cn/xtlv9",     xmrig::CRYPTONIGHT,       xmrig::VARIANT_HALF   },
-    { "cryptonight/wow",       "cn/wow",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_WOW    },
-    { "cryptonight/r",         "cn/r",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_4      },
-    { "cryptonight/rwz",       "cn/rwz",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_RWZ    },
-    { "cryptonight/zls",       "cn/zls",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_ZLS    },
-    { "cryptonight/double",    "cn/double",    xmrig::CRYPTONIGHT,       xmrig::VARIANT_DOUBLE },
-
-#   ifndef XMRIG_NO_AEON
-    { "cryptonight-lite",      "cn-lite",      xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_AUTO },
-    { "cryptonight-light",     "cn-light",     xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_AUTO },
-    { "cryptonight-lite/0",    "cn-lite/0",    xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_0    },
-    { "cryptonight-lite/1",    "cn-lite/1",    xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_1    },
-#   endif
-
-#   ifndef XMRIG_NO_SUMO
-    { "cryptonight-heavy",      "cn-heavy",      xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_AUTO },
-    { "cryptonight-heavy/0",    "cn-heavy/0",    xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_0    },
-    { "cryptonight-heavy/xhv",  "cn-heavy/xhv",  xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_XHV  },
-    { "cryptonight-heavy/tube", "cn-heavy/tube", xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_TUBE },
-#   endif
-
-#   ifndef XMRIG_NO_CN_PICO
-    { "cryptonight-pico/trtl",  "cn-pico/trtl",  xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
-    { "cryptonight-pico",       "cn-pico",       xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
-    { "cryptonight-turtle",     "cn-trtl",       xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
-    { "cryptonight-ultralite",  "cn-ultralite",  xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
-    { "cryptonight_turtle",     "cn_turtle",     xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
-#   endif
-
-#   ifndef XMRIG_NO_CN_GPU
-    { "cryptonight/gpu",        "cn/gpu",  xmrig::CRYPTONIGHT, xmrig::VARIANT_GPU },
-#   endif
+    { "lyra2-webchain",                 "lyra2-web",        xmrig::LYRA2,             xmrig::VARIANT_AUTO },
+    { "lyra2-webchain/1",               "lyra2-web/1",      xmrig::LYRA2,             xmrig::VARIANT_0    },
 };
-
-
-#ifdef XMRIG_PROXY_PROJECT
-static AlgoData const xmrStakAlgorithms[] = {
-    { "cryptonight-monerov7",    nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_1    },
-    { "cryptonight_v7",          nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_1    },
-    { "cryptonight-monerov8",    nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_2    },
-    { "cryptonight_v8",          nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_2    },
-    { "cryptonight_v7_stellite", nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_XTL  },
-    { "cryptonight_lite",        nullptr, xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_0    },
-    { "cryptonight-aeonv7",      nullptr, xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_1    },
-    { "cryptonight_lite_v7",     nullptr, xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_1    },
-    { "cryptonight_heavy",       nullptr, xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_0    },
-    { "cryptonight_haven",       nullptr, xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_XHV  },
-    { "cryptonight_masari",      nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_MSR  },
-    { "cryptonight_masari",      nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_MSR  },
-    { "cryptonight-bittube2",    nullptr, xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_TUBE }, // bittube-miner
-    { "cryptonight_alloy",       nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_XAO  }, // xmr-stak-alloy
-    { "cryptonight_turtle",      nullptr, xmrig::CRYPTONIGHT_PICO,  xmrig::VARIANT_TRTL },
-    { "cryptonight_gpu",         nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_GPU  },
-    { "cryptonight_r",           nullptr, xmrig::CRYPTONIGHT,       xmrig::VARIANT_4  },
-};
-#endif
 
 
 static const char *variants[] = {
     "0",
     "1",
-    "tube",
-    "xtl",
-    "msr",
-    "xhv",
-    "xao",
-    "rto",
-    "2",
-    "half",
-    "trtl",
-    "gpu",
-    "wow",
-    "r",
-    "rwz",
-    "zls",
-    "double"
 };
 
 
-static_assert(xmrig::VARIANT_MAX == ARRAY_SIZE(variants), "variants size mismatch");
+//static_assert(xmrig::VARIANT_MAX == ARRAY_SIZE(variants), "variants size mismatch");
 
 
 bool xmrig::Algorithm::isValid() const
@@ -177,14 +100,9 @@ void xmrig::Algorithm::parseAlgorithm(const char *algo)
     m_variant = VARIANT_AUTO;
 
     assert(algo != nullptr);
-    if (algo == nullptr || strlen(algo) < 1) {
+    if (algo == nullptr) {
         return;
-    }
 
-    if (*algo == '!') {
-        m_flags |= Forced;
-
-        return parseAlgorithm(algo + 1);
     }
 
     for (size_t i = 0; i < ARRAY_SIZE(algorithms); i++) {
@@ -203,48 +121,29 @@ void xmrig::Algorithm::parseAlgorithm(const char *algo)
 
 void xmrig::Algorithm::parseVariant(const char *variant)
 {
-    m_variant = VARIANT_AUTO;
-
-    if (variant == nullptr || strlen(variant) < 1) {
+    if (m_algo == LYRA2) {
+        m_variant = VARIANT_0;
         return;
     }
 
-    if (*variant == '!') {
-        m_flags |= Forced;
-
-        return parseVariant(variant + 1);
-    }
+    m_variant = VARIANT_AUTO;
 
     for (size_t i = 0; i < ARRAY_SIZE(variants); i++) {
         if (strcasecmp(variant, variants[i]) == 0) {
             m_variant = static_cast<Variant>(i);
-            return;
+            break;
         }
-    }
-
-    if (strcasecmp(variant, "xtlv9") == 0) {
-        m_variant = VARIANT_HALF;
     }
 }
 
 
 void xmrig::Algorithm::parseVariant(int variant)
 {
-    assert(variant >= -1 && variant <= 2);
-
-    switch (variant) {
-    case -1:
-    case 0:
-    case 1:
-        m_variant = static_cast<Variant>(variant);
-        break;
-
-    case 2:
-        m_variant = VARIANT_2;
-        break;
-
-    default:
-        break;
+    if (variant >= VARIANT_AUTO && variant <= VARIANT_1) {
+       m_variant = static_cast<Variant>(variant);
+    }
+    else {
+        assert(false);
     }
 }
 
@@ -253,8 +152,8 @@ void xmrig::Algorithm::setAlgo(Algo algo)
 {
     m_algo = algo;
 
-    if (m_algo == CRYPTONIGHT_PICO && m_variant == VARIANT_AUTO) {
-        m_variant = xmrig::VARIANT_TRTL;
+    if (m_algo == LYRA2) {
+        m_variant = VARIANT_0;
     }
 }
 

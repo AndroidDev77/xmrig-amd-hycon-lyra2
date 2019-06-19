@@ -70,9 +70,11 @@ private:
     uint32_t m_pausedNonce;
     uint64_t m_count;
     uint64_t m_sequence;
-    uint8_t m_blob[xmrig::Job::kMaxBlobSize];
+    uint8_t m_blob[BLOB_SIZE];
     xmrig::Job m_job;
     xmrig::Job m_pausedJob;
+
+
 };
 
 

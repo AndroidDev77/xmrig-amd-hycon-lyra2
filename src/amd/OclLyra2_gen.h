@@ -7,6 +7,7 @@
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2019      AppModilla   
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,39 +23,17 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XMRIG_VERSION_H
-#define XMRIG_VERSION_H
+#ifndef XMRIG_OCLLYRA2_GEN_H
+#define XMRIG_OCLLYRA2_GEN_H
 
-#define APP_ID        "webchain-miner"
-#define APP_NAME      "webchain-miner"
-#define APP_DESC      "webchain-miner CPU miner"
-#define APP_VERSION   "2.7.0"
-#define APP_DOMAIN    "webchain.network"
-#define APP_SITE      "webchain.network"
-#define APP_COPYRIGHT "Copyright (C) 2016-2018 xmrig.com; Copyright (C) 2018-2019 Webchain project"
-#define APP_KIND      "cpu"
+#include "amd/GpuContext.h"
 
-#define APP_VER_MAJOR  2
-#define APP_VER_MINOR  7
-#define APP_VER_PATCH  0
-#define APP_VER_REVISION 0
+enum
+{
+    PRECOMPILATION_DEPTH = 1,
+};
+static_assert((PRECOMPILATION_DEPTH >= 1) && (PRECOMPILATION_DEPTH <= 10), "Invalid precompilation depth");
 
-#ifdef _MSC_VER
-#   if (_MSC_VER >= 1920)
-#       define MSVC_VERSION 2019
-#   elif (_MSC_VER >= 1910 && _MSC_VER < 1920)
-#       define MSVC_VERSION 2017
-#   elif _MSC_VER == 1900
-#       define MSVC_VERSION 2015
-#   elif _MSC_VER == 1800
-#       define MSVC_VERSION 2013
-#   elif _MSC_VER == 1700
-#       define MSVC_VERSION 2012
-#   elif _MSC_VER == 1600
-#       define MSVC_VERSION 2010
-#   else
-#       define MSVC_VERSION 0
-#   endif
-#endif
+cl_program Lyra2_get_program(GpuContext* ctx, xmrig::Variant variant, uint64_t height, bool background = false);
 
-#endif /* XMRIG_VERSION_H */
+#endif /* XMRIG_OCLLYRA2_GEN_H */

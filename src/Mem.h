@@ -35,6 +35,7 @@
 
 
 struct cryptonight_ctx;
+struct Lyra2_ctx;
 
 
 struct MemInfo
@@ -59,6 +60,10 @@ public:
     static MemInfo create(cryptonight_ctx **ctx, xmrig::Algo algorithm, size_t count);
     static void init(bool enabled);
     static void release(cryptonight_ctx **ctx, size_t count, MemInfo &info);
+
+	static MemInfo create(Lyra2_ctx** ctx, xmrig::Algo algorithm, size_t count);
+	static void init(bool enabled);
+	static void release(Lyra2_ctx** ctx, size_t count, MemInfo& info);
 
     static void *allocateExecutableMemory(size_t size);
     static void protectExecutableMemory(void *p, size_t size);
