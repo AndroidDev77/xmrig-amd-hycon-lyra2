@@ -331,13 +331,14 @@ void Workers::onResult(uv_async_t *handle)
 
             for (const xmrig::Job &job : baton->jobs) {
                 xmrig::JobResult result(job);
+				memcpy(&result.result[0], &job.result[0], 32);
 
-                if (Lyra2::hash(job, result, ctx)) {
-                    baton->results.push_back(result);
-                }
-                else {
-                    baton->errors++;
-                }
+                //if (Lyra2::hash(job, result, ctx)) {
+                baton->results.push_back(result);
+               // }
+                //else {
+                //    baton->errors++;
+                //}
             }
 
             Mem::release(&ctx, 1, info);

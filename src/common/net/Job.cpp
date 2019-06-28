@@ -111,9 +111,9 @@ bool xmrig::Job::setBlob(const char *blob)
         return false;
     }
 
-    if (*nonce() != 0 && !m_nicehash) {
+   /* if (nonce() != 0 && !m_nicehash) {
         m_nicehash = true;
-    }
+    }*/
 
     /*if (m_autoVariant) {
         m_algorithm.setVariant(variant());

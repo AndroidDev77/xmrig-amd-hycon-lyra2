@@ -60,7 +60,7 @@ public:
     inline bool isNicehash() const                    { return m_nicehash; }
     inline bool isValid() const                       { return m_size > 0 && m_diff > 0; }
     inline bool setId(const char *id)                 { return m_id.setId(id); }
-    inline const uint64_t *nonce() const              { return reinterpret_cast<const uint64_t*>(m_blob + m_size - 8); }
+    //inline const uint64_t *nonce() const              { return reinterpret_cast<const uint64_t*>(m_blob + m_size - 8); }
     inline const uint8_t *blob() const                { return m_blob; }
     inline const Algorithm &algorithm() const         { return m_algorithm; }
     inline const Id &clientId() const                 { return m_clientId; }
@@ -68,9 +68,10 @@ public:
     inline int poolId() const                         { return m_poolId; }
     inline int threadId() const                       { return m_threadId; }
     inline size_t size() const                        { return m_size; }
-    inline uint64_t *nonce()                          { return reinterpret_cast<uint64_t*>(m_blob + m_size - 8); }
+    //inline uint64_t *nonce()                          { return reinterpret_cast<uint64_t*>(m_blob + m_size - 8); }
     inline uint32_t diff() const                      { return static_cast<uint32_t>(m_diff); }
     inline uint64_t target() const                    { return m_target; }
+	inline uint64_t nonce() { return m_nonce; }
     inline uint64_t height() const                    { return 1; }
     inline void reset()                               { m_size = 0; m_diff = 0; }
     inline void setClientId(const Id &id)             { m_clientId = id; }
@@ -86,7 +87,11 @@ public:
 #   endif
 
     static bool fromHex(const char* in, unsigned int len, unsigned char* out);
-    static inline uint64_t *nonce(uint8_t *blob, size_t size) { return reinterpret_cast<uint64_t*>(blob + size - 8); }
+	/*inline uint64_t* nonce(size_t index)
+	{
+		return reinterpret_cast<uint64_t*>(m_blob + ((index + 1) * m_size) - 8);
+	}
+    static inline uint64_t *nonce(uint8_t *blob, size_t size) { return reinterpret_cast<uint64_t*>(blob + size - 8); }*/
     static inline uint64_t toDiff(uint64_t target) { return 0xFFFFFFFFFFFFFFFFULL / target; }
     static void toHex(const unsigned char* in, unsigned int len, char* out);
 
@@ -96,7 +101,8 @@ public:
 
     bool operator==(const Job &other) const;
     bool operator!=(const Job &other) const;
-
+	uint8_t result[32];
+	uint64_t m_nonce;
 private:
     //Variant variant() const;
 

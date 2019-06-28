@@ -19,15 +19,16 @@
  */
 #ifndef LYRA2_H_
 #define LYRA2_H_
-
+#   define __restrict__ __restrict
 #include <stdint.h>
+#include "Lyra.h"
 #include "common/xmrig.h"
 
 typedef unsigned char byte;
 
-struct LYRA2_ctx {
-	uint64_t* wholeMatrix;
-};
+//struct LYRA2_ctx {
+//	uint64_t* wholeMatrix;
+//};
 
 //Block length required so Blake2's Initialization Vector (IV) is not overwritten (THIS SHOULD NOT BE MODIFIED)
 #define BLOCK_LEN_BLAKE2_SAFE_INT64 8                                   //512 bits (=64 bytes, =8 uint64_t)
@@ -47,13 +48,19 @@ struct LYRA2_ctx {
 #define TCOST 4
 #define LYRA2_MEMSIZE (BLOCK_LEN_INT64 * NCOLS * 8 * NROWS)
 
-#define memMatrix(x)  (&ctx->wholeMatrix[x * BLOCK_LEN_INT64 * NCOLS])
+#define memMatrix(x)  (&ctx->memory[x * BLOCK_LEN_INT64 * NCOLS])
 
 
 int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen);
 void* LYRA2_create(void);
 void LYRA2_destroy(void* c);
 
+
+template<xmrig::Algo ALGO, bool SOFT_AES, xmrig::Variant VARIANT>
+inline void lyra2_hash(const uint8_t* __restrict__ input, size_t size, uint8_t* __restrict__ output, Lyra2_ctx** __restrict__ ctx)
+{
+	LYRA2(ctx, output, 32, input, size);
+}
 template<xmrig::Algo ALGO, bool SOFT_AES, xmrig::Variant VARIANT>
 static inline void lyra2_hash(const uint8_t* input, size_t size, uint8_t* output, void* ctx)
 {

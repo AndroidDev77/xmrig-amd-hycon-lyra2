@@ -35,6 +35,7 @@
 #include "common/xmrig.h"
 #include "interfaces/IWorker.h"
 #include "net/JobResult.h"
+#include "crypto/Lyra2_test.h"
 
 
 class Handle;
@@ -73,6 +74,7 @@ private:
     uint8_t m_blob[BLOB_SIZE];
     xmrig::Job m_job;
     xmrig::Job m_pausedJob;
+	
 
 
 };

@@ -45,7 +45,7 @@
   */
 int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 {
-	struct LYRA2_ctx* ctx = ctx2;
+	struct Lyra2_ctx* ctx = (Lyra2_ctx*)ctx2;
 	//============================= Basic variables ============================//
 	int64_t row = 2; //index of row to be processed
 	int64_t prev = 1; //index of prev (last row ever computed/modified)
@@ -67,7 +67,7 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 	const int64_t BLOCK_LEN = (NCOLS == 4) ? BLOCK_LEN_BLAKE2_SAFE_INT64 : BLOCK_LEN_BLAKE2_SAFE_BYTES;
 
 	size_t sz = (size_t)ROW_LEN_BYTES * NROWS;
-	memset(ctx->wholeMatrix, 0, sz);
+	memset(ctx->memory, 0, sz);
 
 	//============= Getting the password + basil padded with 10*1 ===============//
 	//OBS.:The memory matrix will temporarily hold the password: not for saving memory,
@@ -76,7 +76,7 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 	//First, we clean enough blocks for the password, basil and padding
 	int64_t nBlocksInput = ((pwdlen + 6 * sizeof(uint64_t)) / BLOCK_LEN_BLAKE2_SAFE_BYTES) + 1;
 
-	byte* ptrByte = (byte*)ctx->wholeMatrix;
+	byte* ptrByte = (byte*)ctx->memory;
 
 	//Prepends the password
 	memcpy(ptrByte, pwd, pwdlen);
@@ -104,7 +104,7 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 
 	//Now comes the padding
 	*ptrByte = 0x80; //first byte of padding: right after the password
-	ptrByte = (byte*)ctx->wholeMatrix; //resets the pointer to the start of the memory matrix
+	ptrByte = (byte*)ctx->memory; //resets the pointer to the start of the memory matrix
 	ptrByte += nBlocksInput * BLOCK_LEN_BLAKE2_SAFE_BYTES - 1; //sets the pointer to the correct position: end of incomplete block
 	*ptrByte ^= 0x01; //last byte of padding: at the end of the last incomplete block
 	//==========================================================================/
@@ -117,21 +117,21 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 
 	//================================ Setup Phase =============================//
 	//Absorbing salt, password and basil: this is the only place in which the block length is hard-coded to 512 bits
-	uint64_t* ptrWord = ctx->wholeMatrix;
+	uint64_t* ptrWord = (uint64_t*)ctx->memory;
 	for (i = 0; i < nBlocksInput; i++) {
 		absorbBlockBlake2Safe(state, ptrWord); //absorbs each block of pad(pwd || salt || basil)
 		ptrWord += BLOCK_LEN; //goes to next block of pad(pwd || salt || basil)
 	}
 
 	//Initializes M[0] and M[1]
-	reducedSqueezeRow0(state, memMatrix(0)); //The locally copied password is most likely overwritten here
+	reducedSqueezeRow0(state, (uint64_t*)memMatrix(0), NCOLS); //The locally copied password is most likely overwritten here
 
-	reducedDuplexRow1(state, memMatrix(0), memMatrix(1));
+	reducedDuplexRow1(state, (uint64_t*)memMatrix(0), (uint64_t*)memMatrix(1), NCOLS);
 
 	do {
 		//M[row] = rand; //M[row*] = M[row*] XOR rotW(rand)
 
-		reducedDuplexRowSetup(state, memMatrix(prev), memMatrix(rowa), memMatrix(row));
+		reducedDuplexRowSetup(state, (uint64_t*)memMatrix(prev), (uint64_t*)memMatrix(rowa), (uint64_t*)memMatrix(row), NCOLS);
 
 		//updates the value of row* (deterministically picked during Setup))
 		rowa = (rowa + step) & (window - 1);
@@ -161,12 +161,12 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 			rowa = state[0] & (unsigned int)(NROWS - 1);  //(USE THIS IF NROWS IS A POWER OF 2)
 			//rowa = state[0] % NROWS; //(USE THIS FOR THE "GENERIC" CASE)
 			//------------------------------------------------------------------------------------------
-			__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 0);
-			__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 4);
-			__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 8);
+			//__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 0);
+			//__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 4);
+			//__builtin_prefetch((uint64_t*)(memMatrix(rowa)) + 8);
 
 			//Performs a reduced-round duplexing operation over M[row*] XOR M[prev], updating both M[row*] and M[row]
-			reducedDuplexRow(state, memMatrix(prev), memMatrix(rowa), memMatrix(row), ctx);
+			reducedDuplexRow(state, (uint64_t*)memMatrix(prev), (uint64_t*)memMatrix(rowa), (uint64_t*)memMatrix(row), NCOLS);
 
 			//update prev: it now points to the last row ever computed
 			prev = row;
@@ -177,33 +177,33 @@ int LYRA2(void* ctx2, void* K, int64_t kLen, const void* pwd, int32_t pwdlen)
 			//row = (row + step) % NROWS; //(USE THIS FOR THE "GENERIC" CASE)
 			//------------------------------------------------------------------------------------------
 			int64_t nrow = (row + step) & (unsigned int)(NROWS - 1); //(USE THIS IF NROWS IS A POWER OF 2)
-			__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 0);
-			__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 4);
-			__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 8);
+			//__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 0);
+			//__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 4);
+			//__builtin_prefetch((uint64_t*)(memMatrix(nrow)) + 8);
 
 		} while (row != 0);
 	}
 
 	//============================ Wrap-up Phase ===============================//
 	//Absorbs the last block of the memory matrix
-	absorbBlock(state, memMatrix(rowa));
+	absorbBlock(state, (uint64_t*)memMatrix(rowa));
 
 	//Squeezes the key
-	squeeze(state, K, (unsigned int)kLen);
+	squeeze(state, (unsigned char*)K, (unsigned int)kLen);
 
 	return 0;
 }
 
 void* LYRA2_create(void)
 {
-	struct LYRA2_ctx* ctx = malloc(sizeof(struct LYRA2_ctx));
+	struct Lyra2_ctx* ctx = (Lyra2_ctx*)malloc(sizeof(struct Lyra2_ctx));
 
 	const int64_t ROW_LEN_INT64 = BLOCK_LEN_INT64 * NCOLS;
 	const int64_t ROW_LEN_BYTES = ROW_LEN_INT64 * 8;
 
 	size_t sz = (size_t)ROW_LEN_BYTES * NROWS;
-	ctx->wholeMatrix = malloc(sz);
-	if (ctx->wholeMatrix == NULL) {
+	ctx->memory = (uint8_t*)malloc(sz);
+	if (ctx->memory == NULL) {
 		free(ctx);
 		return NULL;
 	}
@@ -213,9 +213,9 @@ void* LYRA2_create(void)
 
 void LYRA2_destroy(void* c)
 {
-	struct LYRA2_ctx* ctx = c;
+	struct Lyra2_ctx* ctx = (Lyra2_ctx*) c;
 	if (ctx) {
-		if (ctx->wholeMatrix) free(ctx->wholeMatrix);
+		if (ctx->memory) free(ctx->memory);
 		free(ctx);
 	}
 }

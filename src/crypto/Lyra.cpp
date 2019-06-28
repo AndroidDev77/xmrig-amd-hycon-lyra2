@@ -32,8 +32,8 @@
 #include "common/log/Log.h"
 #include "common/net/Job.h"
 #include "Mem.h"
-#include "crypto/Lyra.h"
 #include "crypto/lyra2.h"
+#include "crypto/Lyra.h"
 #include "crypto/Lyra2_test.h"
 #include "net/JobResult.h"
 
@@ -45,7 +45,7 @@ xmrig::AlgoVerify Lyra2::m_av  = xmrig::VERIFY_HW_AES;
 
 bool Lyra2::hash(const xmrig::Job &job, xmrig::JobResult &result, Lyra2_ctx *ctx)
 {
-    fn(job.algorithm().variant())(job.blob(), job.size(), result.result, &ctx, job.height());
+    fn(job.algorithm().variant())(job.blob(), job.size(), result.result, &ctx);
 
     return *reinterpret_cast<uint64_t*>(result.result + 24) < job.target();
 }
@@ -60,7 +60,7 @@ bool Lyra2::init(xmrig::Algo algorithm)
 
 
 template<xmrig::Algo ALGO, xmrig::Variant VARIANT>
-static void cryptonight_single_hash_wrapper(const uint8_t *input, size_t size, uint8_t *output, Lyra2_ctx **ctx, uint64_t height)
+static void lyra2_single_hash_wrapper(const uint8_t *input, size_t size, uint8_t *output, Lyra2_ctx **ctx, uint64_t height)
 {
     using namespace xmrig;
     lyra2_single_hash<ALGO, false, VARIANT>(input, size, output, ctx, height);
@@ -73,7 +73,7 @@ Lyra2::lyra2_hash_fun Lyra2::fn(xmrig::Algo algorithm, xmrig::AlgoVerify av, xmr
     using namespace xmrig;
 
     static const lyra2_hash_fun func_table[] = {
-        lyra2_hash<xmrig::LYRA2, false, VARIANT_0>,
+		lyra2_hash<xmrig::LYRA2, false, VARIANT_0>,
 		lyra2_hash<xmrig::LYRA2, false, VARIANT_1>
 
     };
@@ -114,7 +114,7 @@ bool Lyra2::verify(xmrig::Variant variant)
         return false;
     }
 
-    func(test_input, 76, output, &m_ctx, 0);
+    func(test_input, 76, output, &m_ctx);
 
     return memcmp(output, test_output_v1, 32) == 0;
 }

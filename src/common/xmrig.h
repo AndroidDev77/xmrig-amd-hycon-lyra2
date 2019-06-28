@@ -25,6 +25,7 @@
 #ifndef XMRIG_XMRIG_H
 #define XMRIG_XMRIG_H
 
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 
 namespace xmrig
 {

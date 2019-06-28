@@ -27,6 +27,8 @@
 #include <inttypes.h>
 #include <mutex>
 #include <thread>
+#include <random>
+
 
 
 #include "amd/OclGPU.h"
@@ -42,6 +44,7 @@
 
 
 #define MAX_DEVICE_COUNT 32
+std::mt19937 rnd_gen(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
 
 static struct SGPUThreadInterleaveData
@@ -76,30 +79,39 @@ OclWorker::OclWorker(Handle *handle) :
 void OclWorker::start()
 {
     SGPUThreadInterleaveData& interleaveData = GPUThreadInterleaveData[m_ctx->deviceIdx % MAX_DEVICE_COUNT];
-    cl_uint results[0x100];
+	int nThreads = 64;
+	cl_ulong  results[256];
 
     while (Workers::sequence() > 0) {
-        while (!Workers::isOutdated(m_sequence)) {
-            memset(results, 0, sizeof(cl_uint) * (0x100));
+		while (!Workers::isOutdated(m_sequence)) {
+			memset(results, 0, sizeof(cl_ulong) * (256));
 
-            const int64_t delay = interleaveAdjustDelay();
-            if (delay > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+			const int64_t delay = interleaveAdjustDelay();
+			if (delay > 0) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 
 #               ifdef APP_INTERLEAVE_DEBUG
-                LOG_WARN("Thread #%zu was paused for %" PRId64 " ms to adjust interleaving", m_id, delay);
+				LOG_WARN("Thread #%zu was paused for %" PRId64 " ms to adjust interleaving", m_id, delay);
 #               endif
-            }
+			}
 
-            const int64_t t = xmrig::steadyTimestamp();
+			const int64_t t = xmrig::steadyTimestamp();
 
-            XMRRunJob(m_ctx, results, m_job.algorithm().variant());
+			XMRRunJob(m_ctx, results, m_job.algorithm().variant());
 
-            for (size_t i = 0; i < results[0xFF]; i++) {
-                *m_job.nonce() = results[i];
-                Workers::submit(m_job);
-            }
-
+			//for (size_t i = 0; i < results[0xFF]; i++) {
+			for (size_t i = 0; i < nThreads; i++) {
+				uint64_t ptarget = htonll(*reinterpret_cast<uint64_t*>(((uint8_t*)results) + (i*32)));
+				if (ptarget != 0 && ptarget < m_job.target())
+				{
+					m_job.m_nonce = m_ctx->Nonce + i;
+					//*m_job.nonce() = nonce(i);
+					memcpy(m_job.result, &results[((i + 1) * 4) - 4], 32);
+					Workers::submit(m_job);
+				}
+				
+			}
+			m_ctx->Nonce += nThreads;
             storeStats(t);
             std::this_thread::yield();
         }
@@ -216,10 +228,10 @@ void OclWorker::consumeJob()
     m_job.setThreadId(m_id);
 
     if (m_job.isNicehash()) {
-        m_ctx->Nonce = (*m_job.nonce() & 0xff000000U) + (0xffffffU / m_threads * m_id);
+        m_ctx->Nonce = (m_job.nonce() & 0xff000000U) + (0xffffffU / m_threads * (m_id+1));
     }
     else {
-        m_ctx->Nonce = 0xffffffffU / m_threads * m_id;
+		m_ctx->Nonce = (std::uniform_int_distribution<uint64_t>{0, 0xFFFFFFFF}(rnd_gen) << 32) | (0xffffffffULL / m_threads * (m_id+1));
     }
 
     setJob();
@@ -239,7 +251,7 @@ void OclWorker::setJob()
 {
     memcpy(m_blob, m_job.blob(), sizeof(m_blob));
 
-    XMRSetJob(m_ctx, m_blob, m_job.size(), m_job.target(), m_job.algorithm().variant(), m_job.height());
+    XMRSetJob(m_ctx, m_blob, m_job.size(),m_ctx->Nonce , m_job.target(), m_job.algorithm().variant(), m_job.height());
 }
 
 
@@ -269,3 +281,18 @@ void OclWorker::storeStats(int64_t t)
     m_hashCount.store(m_count, std::memory_order_relaxed);
     m_timestamp.store(timestamp, std::memory_order_relaxed);
 }
+
+/*int main(int args, char* argv) 
+
+{
+	xmrig::Job job;
+	job.algorithm = 4;
+	job.clientId = 1;
+	job.diff = 1;
+
+	memcpy(job.blob, test_input, 76);
+
+	XMRSetJob(m_ctx, m_blob, 76, m_job.target(), m_job.algorithm().variant(), m_job.height());
+
+
+}*/

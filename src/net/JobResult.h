@@ -59,7 +59,7 @@ public:
         clientId  = job.clientId();
         poolId    = job.poolId();
         diff      = job.diff();
-        nonce     = *job.nonce();
+        nonce     = job.m_nonce;
         algorithm = job.algorithm();
     }
 
@@ -75,7 +75,7 @@ public:
     Id jobId;
     int poolId;
     uint32_t diff;
-    uint32_t nonce;
+    uint64_t nonce;
     uint8_t result[32];
 };
 

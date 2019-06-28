@@ -33,7 +33,7 @@
 #include "common/xmrig.h"
 #include "crypto/CryptoNight_constants.h"
 
-constexpr const size_t   LYRA2_MEMORY = 16 * 1024 * 1024;
+constexpr const size_t   LYRA2_MEMORY = 6 * 1024 * 1024;
 constexpr const uint32_t LYRA2_MASK = 0xFFFFF0;
 constexpr const uint32_t LYRA2_ITER = 0x1000000;
 
@@ -80,7 +80,7 @@ struct Lyra2_ctx {
 class Lyra2
 {
 public:
-    typedef void (*lyra2_hash_fun)(const uint8_t *input, size_t size, uint8_t *output, Lyra2_ctx **ctx, uint64_t height);
+    typedef void (*lyra2_hash_fun)(const uint8_t *input, size_t size, uint8_t *output, Lyra2_ctx **ctx);
 
     static inline lyra2_hash_fun fn(xmrig::Variant variant) { return fn(m_algorithm, m_av, variant); }
 

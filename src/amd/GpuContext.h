@@ -95,7 +95,7 @@ struct GpuContext
     cl_command_queue CommandQueues;
     cl_mem InputBuffer;
     cl_mem OutputBuffer;
-    cl_mem ExtraBuffers[2];
+    cl_mem ExtraBuffers[1];
     cl_program Program;
     cl_kernel Kernels[1];
     cl_program ProgramLyra2;
@@ -106,7 +106,7 @@ struct GpuContext
     xmrig::String board;
     xmrig::String name;
 
-    uint32_t Nonce;
+    uint64_t Nonce;
 };
 
 
