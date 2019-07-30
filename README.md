@@ -31,7 +31,7 @@ GPU mining part based on [Wolf9466](https://github.com/OhGodAPet) and [psychocry
 * High performance.
 * Official Windows support.
 * Support for backup (failover) mining server.
-* CryptoNight-Lite support for AEON.
+* Lyra2 support for Webchain (curquhart90@gmail.com)
 * Automatic GPU configuration.
 * Nicehash support.
 * It's open source software.
