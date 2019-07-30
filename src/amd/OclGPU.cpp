@@ -543,7 +543,7 @@ size_t XMRSetJob(GpuContext *ctx, uint8_t *input, size_t input_len, uint64_t non
     
     cl_uint numThreads = ctx->rawIntensity;
 
-    if ((ret = OclLib::enqueueWriteBuffer(ctx->CommandQueues, ctx->InputBuffer, CL_TRUE, 0, input_len*sizeof(uint8_t), input, 0, nullptr, nullptr)) != CL_SUCCESS) {
+    if ((ret = OclLib::enqueueWriteBuffer(ctx->CommandQueues, ctx->InputBuffer, CL_TRUE, 0, input_len, input, 0, nullptr, nullptr)) != CL_SUCCESS) {
         LOG_ERR("Error %s when calling clEnqueueWriteBuffer to fill input buffer.", err_to_str(ret));
         return OCL_ERR_API;
     }
@@ -563,7 +563,7 @@ size_t XMRSetJob(GpuContext *ctx, uint8_t *input, size_t input_len, uint64_t non
 
     // input length
     if ((ret = OclLib::setKernelArg(ctx->Kernels[cn0_kernel_offset], 2, sizeof(uint64_t), &input_len)) != CL_SUCCESS) {
-        LOG_ERR(kSetKernelArgErr, err_to_str(ret), cn0_kernel_offset,3);
+        LOG_ERR(kSetKernelArgErr, err_to_str(ret), cn0_kernel_offset,2);
         return OCL_ERR_API;
     }
 
@@ -578,16 +578,24 @@ size_t XMRSetJob(GpuContext *ctx, uint8_t *input, size_t input_len, uint64_t non
 		LOG_ERR(kSetKernelArgErr, err_to_str(ret), cn0_kernel_offset, 4);
 		return OCL_ERR_API;
 	}
+
 	// Nonce
 	if ((ret = OclLib::setKernelArg(ctx->Kernels[cn0_kernel_offset], 5, sizeof(uint64_t), &nonce)) != CL_SUCCESS) {
 		LOG_ERR(kSetKernelArgErr, err_to_str(ret), cn0_kernel_offset, 5);
 		return OCL_ERR_API;
 	}
+
+	// Target
+	if ((ret = OclLib::setKernelArg(ctx->Kernels[cn0_kernel_offset], 6, sizeof(uint64_t), &target)) != CL_SUCCESS) {
+		LOG_ERR(kSetKernelArgErr, err_to_str(ret), cn0_kernel_offset, 6);
+		return OCL_ERR_API;
+	}
+
 	
     return OCL_ERR_SUCCESS;
 }
 
-size_t XMRRunJob(GpuContext *ctx, cl_ulong *HashOutput, xmrig::Variant variant)
+size_t XMRRunJob(GpuContext *ctx, uint8_t*HashOutput, xmrig::Variant variant)
 {
     cl_int ret;
     cl_uint zero = 0;
@@ -611,14 +619,13 @@ size_t XMRRunJob(GpuContext *ctx, cl_ulong *HashOutput, xmrig::Variant variant)
         LOG_ERR("Error %s when calling clEnqueueNDRangeKernel for kernel %d.", err_to_str(ret), 0);
         return OCL_ERR_API;
     }
-	//OclLib::finish(ctx->CommandQueues);
+	OclLib::finish(ctx->CommandQueues);
 
 	if ((ret = OclLib::enqueueReadBuffer(ctx->CommandQueues, ctx->OutputBuffer, CL_TRUE,
 		0, sizeof(cl_ulong) * 4 * ctx->rawIntensity , HashOutput, 0, nullptr, nullptr)) != CL_SUCCESS) {
 		LOG_ERR("Error %s when calling clEnqueueReadBuffer to fetch results.", err_to_str(ret));
 		return OCL_ERR_API;
 	}
-    OclLib::finish(ctx->CommandQueues);
 	/*auto& numHashValues = HashOutput[0xFF];
 	if (numHashValues > 0xFF) {
 		numHashValues = 0xFF;

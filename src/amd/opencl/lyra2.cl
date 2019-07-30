@@ -1,5 +1,5 @@
-
-R"===(#ifdef cl_clang_storage_class_specifiers
+R"===(
+#ifdef cl_clang_storage_class_specifiers
 #pragma OPENCL EXTENSION cl_clang_storage_class_specifiers : enable
 #endif
 
@@ -205,7 +205,7 @@ do { \
 #endif
 
 __attribute__((reqd_work_group_size(1, 1, 1)))
-__kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 pwdlen, __global sph_u64* output, ulong Threads, sph_u64 nonce){
+__kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 pwdlen, __global sph_u64* output, ulong Threads, sph_u64 nonce, sph_u64 target){
   uint gid = get_global_id(0);
   sph_s64 kLen = 32;
   int ROW_LEN_INT64 = BLOCK_LEN_INT64 * NCOLS; // 12 * 4 = 48
@@ -231,7 +231,7 @@ __kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 p
   //Tries to allocate enough space for the whole memory matrix
   //printf("Matrix Size :%i", NROWS *BLOCK_LEN_INT64  * NCOLS);
   //unsigned long Matrix[NROWS *BLOCK_LEN_INT64  * NCOLS]; // 16384 * 12 * 4 = 786,432
-  for(int k = 0; k < (NROWS *BLOCK_LEN_INT64  * NCOLS); k++)
+  for(int k = 0; k < (NROWS *ROW_LEN_BYTES); k++)
   {
      Matrix[k + (gid * LYRA2_MEMSIZE/8 )] = 0;
   }
@@ -243,8 +243,8 @@ __kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 p
      ptrByte[j] = pwd[j]; 
   }
   //nonce
-  __global unsigned long* ptrLongNonce = (__global unsigned long*)(&ptrByte[pwdlen-4]);
-  ptrLongNonce[0] = nonce + gid;
+  __global unsigned long* ptrLongNonce = (__global unsigned long*)(&ptrByte[pwdlen-8]);
+  ptrLongNonce[0] = nonce + (ulong)gid;
   
   
   long length = pwdlen;
@@ -288,7 +288,6 @@ __kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 p
   }
   
   //Initializes M[0] and M[1]
-    
   /// reducedSqueezeRow0
   ptrWordRowIn = (((NCOLS-1) * BLOCK_LEN_INT64) + memPtrStart);
   for (int i = 0; i < NCOLS; i++)
@@ -371,22 +370,23 @@ __kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 p
 			ptrWordRowIn = memMatrix(prev);
 	        ptrWordRowInOut = memMatrix(rowa);
             ptrWordRowOut  = memMatrix(row);
-            
-			for(int i = 0; i < 48; i++)
-	        {
+            prefetch(ptrWordRowInOut, 48);
+			prefetch(ptrWordRowOut, 48);
+			//for(int i = 0; i < 48; i++)
+	        //{
 			   //tempWordRowIn[i]    = ptrWordRowIn[i];
 			   //tempWordRowInOut[i] = ptrWordRowInOut[i];
 			   //tempWordRowOut[i]    = ptrWordRowOut[i];
-	        }
+	        //}
 
 			reduceDuplexRow(ptrWordRowIn, ptrWordRowInOut, ptrWordRowOut);
 
-            for(int i = 0; i < 48; i++)
-	        {
+            //for(int i = 0; i < 48; i++)
+	        //{
 	           //ptrWordRowIn[i] = tempWordRowIn[i];
 		       //ptrWordRowInOut[i] = tempWordRowInOut[i];
 		       //ptrWordRowOut[i] = tempWordRowOut[i];
-	        }
+	        //}
 			prev = row;
 			row = (row + step) & (unsigned long)(NROWS-1); //(USE THIS IF NROWS IS A POWER OF 2)
 			//int nrow = (row + step) & (unsigned int)(NROWS-1); //(USE THIS IF NROWS IS A POWER OF 2)
@@ -395,10 +395,12 @@ __kernel void lyra2(__global unsigned long* Matrix,__global uchar* pwd,sph_s64 p
   }
   
   absorbblock( memMatrix(rowa));
-  
-  for(int k = 0; k < 4; k++)
+  if(state[0] <= target)
   {
-    output[k + (gid * 4 )] = state[k];
+	  for(int k = 0; k < 4; k++)
+	  {
+		output[k + (gid * 4 )] = state[k];
+	  }
   }
   }
 
